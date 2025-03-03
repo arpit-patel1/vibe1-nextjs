@@ -1,0 +1,25 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Head -->
+  <circle cx="100" cy="100" r="80" fill="#FFD699" stroke="#000" stroke-width="2"/>
+  
+  <!-- Eyes -->
+  <circle cx="70" cy="85" r="12" fill="#FFF" stroke="#000" stroke-width="2"/>
+  <circle cx="130" cy="85" r="12" fill="#FFF" stroke="#000" stroke-width="2"/>
+  <circle cx="70" cy="85" r="6" fill="#000"/>
+  <circle cx="130" cy="85" r="6" fill="#000"/>
+  
+  <!-- Eyebrows raised in excitement -->
+  <path d="M55,65 Q70,55 85,65" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+  <path d="M115,65 Q130,55 145,65" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Big smile -->
+  <path d="M60,120 Q100,160 140,120" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Rosy cheeks -->
+  <circle cx="60" cy="105" r="12" fill="#FFB6C1" opacity="0.7"/>
+  <circle cx="140" cy="105" r="12" fill="#FFB6C1" opacity="0.7"/>
+  
+  <!-- Stars for excitement -->
+  <path d="M40,40 L43,50 L35,45 L45,45 L37,50 Z" fill="#FFD700"/>
+  <path d="M160,40 L163,50 L155,45 L165,45 L157,50 Z" fill="#FFD700"/>
+</svg> 

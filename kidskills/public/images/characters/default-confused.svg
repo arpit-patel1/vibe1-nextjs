@@ -1,0 +1,23 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Head -->
+  <circle cx="100" cy="100" r="80" fill="#FFD699" stroke="#000" stroke-width="2"/>
+  
+  <!-- Eyes -->
+  <circle cx="70" cy="85" r="10" fill="#FFF" stroke="#000" stroke-width="2"/>
+  <circle cx="130" cy="85" r="10" fill="#FFF" stroke="#000" stroke-width="2"/>
+  <circle cx="70" cy="85" r="5" fill="#000"/>
+  <circle cx="130" cy="85" r="5" fill="#000"/>
+  
+  <!-- Confused eyebrows -->
+  <path d="M60,70 Q70,65 80,75" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+  <path d="M120,75 Q130,65 140,70" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Confused mouth -->
+  <path d="M80,125 Q100,120 120,125" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Question mark -->
+  <text x="150" y="60" font-family="Arial" font-size="30" font-weight="bold">?</text>
+  
+  <!-- Scratching head -->
+  <path d="M40,60 Q30,50 35,40" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+</svg> 

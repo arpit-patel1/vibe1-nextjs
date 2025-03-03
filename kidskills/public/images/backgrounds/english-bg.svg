@@ -1,0 +1,64 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFEBEE" />
+      <stop offset="100%" stop-color="#FFCDD2" />
+    </linearGradient>
+    <pattern id="letter-pattern" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+      <!-- Alphabet pattern -->
+      <text x="10" y="30" font-family="Arial" font-size="20" fill="#FF7043" opacity="0.2">A</text>
+      <text x="40" y="60" font-family="Arial" font-size="20" fill="#FF7043" opacity="0.2">B</text>
+      <text x="70" y="30" font-family="Arial" font-size="20" fill="#FF7043" opacity="0.2">C</text>
+      <text x="100" y="60" font-family="Arial" font-size="20" fill="#FF7043" opacity="0.2">D</text>
+      <text x="10" y="90" font-family="Arial" font-size="20" fill="#FF7043" opacity="0.2">E</text>
+      <text x="40" y="120" font-family="Arial" font-size="20" fill="#FF7043" opacity="0.2">F</text>
+      <text x="70" y="90" font-family="Arial" font-size="20" fill="#FF7043" opacity="0.2">G</text>
+      <text x="100" y="120" font-family="Arial" font-size="20" fill="#FF7043" opacity="0.2">H</text>
+    </pattern>
+  </defs>
+  
+  <!-- Main background -->
+  <rect width="1200" height="800" fill="url(#bg-gradient)" />
+  
+  <!-- Pattern overlay -->
+  <rect width="1200" height="800" fill="url(#letter-pattern)" />
+  
+  <!-- Decorative elements -->
+  <circle cx="100" cy="100" r="50" fill="#FF7043" opacity="0.1" />
+  <circle cx="1100" cy="700" r="70" fill="#FF7043" opacity="0.1" />
+  <circle cx="200" cy="600" r="40" fill="#FF7043" opacity="0.1" />
+  <circle cx="1000" cy="200" r="60" fill="#FF7043" opacity="0.1" />
+  
+  <!-- Book illustration -->
+  <path d="M900,50 L1020,50 L1020,210 L900,210 Z" fill="#FFFFFF" stroke="#FF7043" stroke-width="2" opacity="0.6" />
+  <path d="M960,50 L960,210" stroke="#FF7043" stroke-width="1" opacity="0.6" />
+  <path d="M910,70 L950,70" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M910,90 L950,90" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M910,110 L950,110" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M910,130 L950,130" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M910,150 L950,150" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M910,170 L950,170" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M910,190 L950,190" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M970,70 L1010,70" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M970,90 L1010,90" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M970,110 L1010,110" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M970,130 L1010,130" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M970,150 L1010,150" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M970,170 L1010,170" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M970,190 L1010,190" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  
+  <!-- Pencil illustration -->
+  <path d="M50,400 L250,400 L250,430 L50,430 Z" fill="#FFEB3B" stroke="#FF7043" stroke-width="2" opacity="0.6" />
+  <path d="M250,400 L280,415 L250,430" fill="#FF5252" stroke="#FF7043" stroke-width="2" opacity="0.6" />
+  <path d="M50,400 L30,415 L50,430" fill="#A1887F" stroke="#FF7043" stroke-width="2" opacity="0.6" />
+  <path d="M70,400 L70,430" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M90,400 L90,430" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M110,400 L110,430" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M130,400 L130,430" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M150,400 L150,430" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M170,400 L170,430" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M190,400 L190,430" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M210,400 L210,430" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+  <path d="M230,400 L230,430" stroke="#FF7043" stroke-width="1" opacity="0.3" />
+</svg> 

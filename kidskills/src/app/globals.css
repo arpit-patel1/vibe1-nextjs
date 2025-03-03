@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Nunito:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --foreground-rgb: 45, 49, 66; /* charcoal */
+  --background-rgb: 255, 252, 249; /* warm white */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  font-family: 'Comic Neue', cursive;
+  font-size: 18px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+}
+
+/* Accessibility - Remove focus outlines only if the user is not using keyboard navigation */
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}
+
+@layer components {
+  /* Large, kid-friendly buttons */
+  .kid-button {
+    @apply bg-blue-500 text-white font-bold py-4 px-6 rounded-2xl text-xl 
+           shadow-md hover:shadow-lg transition-all duration-300 
+           hover:scale-105 active:scale-95 min-w-[60px] min-h-[60px]
+           flex items-center justify-center;
+  }
+
+  /* Activity card styling */
+  .activity-card {
+    @apply bg-white rounded-3xl p-6 shadow-md border-2 border-gray-200
+           hover:shadow-lg transition-all duration-300 cursor-pointer;
+  }
+
+  /* Subject-specific colors */
+  .math-theme {
+    @apply bg-blue-500 border-blue-500 text-white;
+  }
+
+  .english-theme {
+    @apply bg-green-500 border-green-500 text-white;
+  }
+
+  .leadership-theme {
+    @apply bg-purple-400 border-purple-400 text-white;
+  }
+}

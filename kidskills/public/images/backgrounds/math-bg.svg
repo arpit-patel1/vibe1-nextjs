@@ -1,0 +1,52 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E3F2FD" />
+      <stop offset="100%" stop-color="#BBDEFB" />
+    </linearGradient>
+    <pattern id="math-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <!-- Math symbols pattern -->
+      <text x="10" y="30" font-family="Arial" font-size="20" fill="#4A7CFF" opacity="0.2">+</text>
+      <text x="40" y="60" font-family="Arial" font-size="20" fill="#4A7CFF" opacity="0.2">-</text>
+      <text x="70" y="30" font-family="Arial" font-size="20" fill="#4A7CFF" opacity="0.2">×</text>
+      <text x="10" y="90" font-family="Arial" font-size="20" fill="#4A7CFF" opacity="0.2">÷</text>
+      <text x="70" y="90" font-family="Arial" font-size="20" fill="#4A7CFF" opacity="0.2">=</text>
+      <text x="40" y="30" font-family="Arial" font-size="20" fill="#4A7CFF" opacity="0.2">π</text>
+    </pattern>
+  </defs>
+  
+  <!-- Main background -->
+  <rect width="1200" height="800" fill="url(#bg-gradient)" />
+  
+  <!-- Pattern overlay -->
+  <rect width="1200" height="800" fill="url(#math-pattern)" />
+  
+  <!-- Decorative elements -->
+  <circle cx="100" cy="100" r="50" fill="#4A7CFF" opacity="0.1" />
+  <circle cx="1100" cy="700" r="70" fill="#4A7CFF" opacity="0.1" />
+  <circle cx="200" cy="600" r="40" fill="#4A7CFF" opacity="0.1" />
+  <circle cx="1000" cy="200" r="60" fill="#4A7CFF" opacity="0.1" />
+  
+  <!-- Calculator illustration -->
+  <rect x="900" y="50" width="120" height="160" rx="10" fill="#FFFFFF" stroke="#4A7CFF" stroke-width="2" opacity="0.6" />
+  <rect x="910" y="60" width="100" height="30" rx="5" fill="#E6F7FF" stroke="#4A7CFF" stroke-width="1" opacity="0.6" />
+  <circle cx="930" cy="110" r="10" fill="#4A7CFF" opacity="0.6" />
+  <circle cx="970" cy="110" r="10" fill="#4A7CFF" opacity="0.6" />
+  <circle cx="930" cy="150" r="10" fill="#4A7CFF" opacity="0.6" />
+  <circle cx="970" cy="150" r="10" fill="#4A7CFF" opacity="0.6" />
+  
+  <!-- Ruler illustration -->
+  <rect x="50" y="400" width="200" height="30" fill="#FFFFFF" stroke="#4A7CFF" stroke-width="2" opacity="0.6" />
+  <path d="M50,400 L50,430" stroke="#4A7CFF" stroke-width="2" opacity="0.6" />
+  <path d="M70,400 L70,415" stroke="#4A7CFF" stroke-width="1" opacity="0.6" />
+  <path d="M90,400 L90,430" stroke="#4A7CFF" stroke-width="2" opacity="0.6" />
+  <path d="M110,400 L110,415" stroke="#4A7CFF" stroke-width="1" opacity="0.6" />
+  <path d="M130,400 L130,430" stroke="#4A7CFF" stroke-width="2" opacity="0.6" />
+  <path d="M150,400 L150,415" stroke="#4A7CFF" stroke-width="1" opacity="0.6" />
+  <path d="M170,400 L170,430" stroke="#4A7CFF" stroke-width="2" opacity="0.6" />
+  <path d="M190,400 L190,415" stroke="#4A7CFF" stroke-width="1" opacity="0.6" />
+  <path d="M210,400 L210,430" stroke="#4A7CFF" stroke-width="2" opacity="0.6" />
+  <path d="M230,400 L230,415" stroke="#4A7CFF" stroke-width="1" opacity="0.6" />
+  <path d="M250,400 L250,430" stroke="#4A7CFF" stroke-width="2" opacity="0.6" />
+</svg> 

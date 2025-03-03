@@ -1,0 +1,20 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Badge background -->
+  <circle cx="50" cy="50" r="45" fill="#4A7CFF" />
+  <circle cx="50" cy="50" r="40" fill="#3D5AFE" />
+  
+  <!-- Star shape -->
+  <path d="M50,15 L57,35 L79,35 L61,48 L68,68 L50,55 L32,68 L39,48 L21,35 L43,35 Z" fill="#FFD700" stroke="#FFFFFF" stroke-width="2" />
+  
+  <!-- Math symbols -->
+  <text x="40" y="45" font-family="Arial" font-size="12" font-weight="bold" fill="#FFFFFF">+</text>
+  <text x="55" y="45" font-family="Arial" font-size="12" font-weight="bold" fill="#FFFFFF">-</text>
+  <text x="40" y="60" font-family="Arial" font-size="12" font-weight="bold" fill="#FFFFFF">×</text>
+  <text x="55" y="60" font-family="Arial" font-size="12" font-weight="bold" fill="#FFFFFF">÷</text>
+  
+  <!-- Badge text -->
+  <path id="curve" d="M15,75 Q50,95 85,75" fill="none" />
+  <text font-family="Arial" font-size="10" font-weight="bold" fill="#FFFFFF">
+    <textPath href="#curve" text-anchor="middle" startOffset="50%">MATH MASTER</textPath>
+  </text>
+</svg> 
