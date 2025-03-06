@@ -14,7 +14,7 @@ import OpenAI from 'openai';
  */
 export function createAIClient(apiKey: string, model: AIModelConfig) {
   console.log(`createAIClient: Starting with API key length: ${apiKey ? apiKey.length : 0}`);
-  console.log(`createAIClient: Model info - name: ${model.name}, id: ${model.id}, provider: ${model.provider}`);
+  console.log(`createAIClient: Model info - name: ${model?.name || 'unknown'}, id: ${model?.id || 'unknown'}, provider: ${model?.provider || 'unknown'}`);
   
   if (!apiKey) {
     console.error('createAIClient: API key is missing');
@@ -23,22 +23,25 @@ export function createAIClient(apiKey: string, model: AIModelConfig) {
   
   if (!model || !model.id) {
     console.error('createAIClient: Invalid model provided:', model);
-    throw new Error('Invalid model configuration');
+    // Use a default model instead of throwing an error
+    model = {
+      id: 'google/gemini-2.0-pro-exp-02-05:free',
+      name: 'Gemini 2.0 Pro',
+      description: 'Advanced model from Google',
+      tokensPerMinute: 160000,
+      costPer1KTokens: 0.10,
+      provider: 'openrouter'
+    };
+    console.log('createAIClient: Using default model instead:', model.name);
   }
   
-  // Log localStorage state for debugging
-  if (typeof window !== 'undefined') {
-    console.log('createAIClient: Current localStorage state:');
-    console.log('- selected_ai_model:', localStorage.getItem('selected_ai_model'));
-    const storedModelDetails = localStorage.getItem('selected_model_details');
-    console.log('- selected_model_details:', storedModelDetails ? 'Present' : 'Missing');
-    
-    // Check if the model we're using matches what's in localStorage
-    const storedModelId = localStorage.getItem('selected_ai_model');
-    if (storedModelId && storedModelId !== model.id) {
-      console.warn(`createAIClient: Model mismatch - using ${model.id} but localStorage has ${storedModelId}`);
-    } else if (storedModelId && storedModelId === model.id) {
-      console.log(`createAIClient: Model matches localStorage: ${model.id}`);
+  // Check window.ENV if available for debugging
+  if (typeof window !== 'undefined' && window.ENV && window.ENV.NEXT_PUBLIC_DEFAULT_AI_MODEL) {
+    console.log(`createAIClient: Environment model: ${window.ENV.NEXT_PUBLIC_DEFAULT_AI_MODEL}`);
+    if (window.ENV.NEXT_PUBLIC_DEFAULT_AI_MODEL !== model.id) {
+      console.log(`createAIClient: Using model ${model.id} instead of environment model ${window.ENV.NEXT_PUBLIC_DEFAULT_AI_MODEL}`);
+    } else {
+      console.log(`createAIClient: Model matches environment: ${model.id}`);
     }
   }
   
@@ -46,7 +49,33 @@ export function createAIClient(apiKey: string, model: AIModelConfig) {
   
   if (!provider) {
     console.error(`createAIClient: Unknown provider: ${model.provider}`);
-    throw new Error(`Unknown provider: ${model.provider}`);
+    // Use a default provider instead of throwing an error
+    const defaultProvider = {
+      id: 'openrouter',
+      name: 'OpenRouter',
+      description: 'Access to multiple AI models through a single API',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      isDefault: true
+    };
+    console.log('createAIClient: Using default provider instead:', defaultProvider.name);
+    
+    try {
+      const client = new OpenAI({
+        apiKey,
+        baseURL: defaultProvider.baseUrl,
+        dangerouslyAllowBrowser: true, // Required for client-side usage
+        defaultHeaders: {
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://kidskills.app', // Required for OpenRouter
+          'X-Title': 'KidSkills' // Application name for OpenRouter
+        }
+      });
+      
+      console.log(`createAIClient: Successfully created client for ${defaultProvider.name} using model ${model.id}`);
+      return client;
+    } catch (error) {
+      console.error(`createAIClient: Error creating client for ${defaultProvider.name}:`, error);
+      throw error;
+    }
   }
   
   console.log(`createAIClient: Creating client for provider: ${provider.name} with baseURL: ${provider.baseUrl}`);
@@ -57,7 +86,7 @@ export function createAIClient(apiKey: string, model: AIModelConfig) {
       baseURL: provider.baseUrl,
       dangerouslyAllowBrowser: true, // Required for client-side usage
       defaultHeaders: {
-        'HTTP-Referer': window.location.origin, // Required for OpenRouter
+        'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://kidskills.app', // Required for OpenRouter
         'X-Title': 'KidSkills' // Application name for OpenRouter
       }
     });

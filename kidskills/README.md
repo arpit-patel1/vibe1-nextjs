@@ -2,7 +2,24 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, set up your environment variables:
+
+1. Copy the `.env.local.example` file to `.env.local`:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. Edit `.env.local` and add your OpenRouter API key:
+   ```
+   NEXT_PUBLIC_OPENROUTER_API_KEY=your-api-key-here
+   ```
+
+3. Optionally, change the default AI model:
+   ```
+   NEXT_PUBLIC_DEFAULT_AI_MODEL=google/gemini-2.0-pro-exp-02-05:free
+   ```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -19,6 +36,19 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Environment Variables
+
+This application uses the following environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_OPENROUTER_API_KEY` | Your OpenRouter API key | None |
+| `NEXT_PUBLIC_DEFAULT_AI_MODEL` | Default AI model to use | google/gemini-2.0-pro-exp-02-05:free |
+
+You can set these variables in your `.env.local` file for local development, or in your deployment environment for production.
+
+Users can override these settings on the Settings page if they prefer to use different values.
 
 ## Learn More
 

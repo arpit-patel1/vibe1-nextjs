@@ -123,21 +123,54 @@ const AIEnglishActivity: React.FC<ActivityProps> = ({
     }
     
     try {
-      // Generate a new question
-      const question = await generateAIQuestion({
-        subject: 'english',
-        questionType: currentExerciseType,
-        difficulty: preferences.difficulty,
-        gradeLevel: preferences.gradeLevel,
-        previousPerformance,
-        interests: preferences.interests,
-        additionalParams
-      });
+      let question;
+      
+      // Use local generation if API key is invalid or not available
+      if (!isApiKeyValid || !apiKey) {
+        console.log('Using local question generation (no valid API key)');
+        question = await generateAIQuestion({
+          subject: 'english',
+          questionType: currentExerciseType,
+          difficulty: preferences.difficulty,
+          gradeLevel: preferences.gradeLevel,
+          previousPerformance,
+          interests: preferences.interests,
+          additionalParams
+        });
+      } else {
+        // Try to use the API first
+        try {
+          console.log('Attempting to generate question via API');
+          question = await generateQuestion({
+            apiKey: apiKey,
+            model: selectedModel,
+            subject: 'english',
+            questionType: currentExerciseType,
+            difficulty: preferences.difficulty,
+            gradeLevel: preferences.gradeLevel,
+            previousPerformance,
+            interests: preferences.interests,
+            additionalParams
+          });
+        } catch (apiError) {
+          console.error('API question generation failed, falling back to local:', apiError);
+          // Fall back to local generation if API fails
+          question = await generateAIQuestion({
+            subject: 'english',
+            questionType: currentExerciseType,
+            difficulty: preferences.difficulty,
+            gradeLevel: preferences.gradeLevel,
+            previousPerformance,
+            interests: preferences.interests,
+            additionalParams
+          });
+        }
+      }
       
       setCurrentQuestion(question);
       
       // Set reading passage if available
-      if (question.readingPassage) {
+      if (question && question.readingPassage) {
         setReadingPassage(question.readingPassage);
       } else {
         setReadingPassage(null);
@@ -148,7 +181,7 @@ const AIEnglishActivity: React.FC<ActivityProps> = ({
       console.error('Error generating question:', error);
       setLoading(false);
     }
-  }, [activityId, getActivityProgress, preferences, getExerciseType]);
+  }, [activityId, getActivityProgress, preferences, getExerciseType, apiKey, isApiKeyValid, selectedModel]);
   
   // Load initial question
   useEffect(() => {
@@ -224,7 +257,24 @@ const AIEnglishActivity: React.FC<ActivityProps> = ({
   
   // Show API key prompt if no valid key
   if (!isApiKeyValid && !apiKey) {
-    return <APIKeyPrompt />;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-4">
+        <h2 className="text-2xl font-bold mb-4">API Key Required</h2>
+        <p className="mb-6 text-center">
+          To use AI-generated questions, you need to set up an OpenRouter API key. 
+          However, you can still continue with pre-generated questions.
+        </p>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => generateNextQuestion()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Continue with Pre-generated Questions
+          </button>
+          <APIKeyPrompt />
+        </div>
+      </div>
+    );
   }
 
   // Show loading spinner

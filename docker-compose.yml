@@ -1,0 +1,22 @@
+services:
+  kidskills:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      # AI configuration
+      - NEXT_PUBLIC_DEFAULT_AI_MODEL=google/gemini-2.0-pro-exp-02-05:free
+      # OpenRouter API key from .env file
+      - NEXT_PUBLIC_OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      # Add the original variable as well for compatibility
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http = require('http'); const options = { hostname: 'localhost', port: 3000, path: '/', method: 'GET' }; const req = http.request(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1)); req.end();"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s 

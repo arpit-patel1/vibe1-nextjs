@@ -94,64 +94,87 @@ const safeLocalStorage = {
   }
 };
 
-// Provider component
-export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // State for API key
-  const [apiKey, setApiKey] = useState<string>('');
-  
-  // State for selected model and provider
-  // Initialize with a placeholder - we'll load from localStorage in useEffect
-  const [selectedModel, setSelectedModel] = useState<AIModelConfig>(() => {
-    // Try to get the model from localStorage first
+// Helper function to safely get environment variables
+function getEnvVariable(key: string): string | undefined {
+  try {
+    // Check if we're in a browser environment
     if (typeof window !== 'undefined') {
-      try {
-        const storedModelId = localStorage.getItem('selected_ai_model');
-        console.log('AIProvider init: Checking for stored model ID:', storedModelId);
-        
-        if (storedModelId) {
-          // First check if it's a predefined model
-          const predefinedModel = AVAILABLE_MODELS.find(m => m.id === storedModelId);
-          
-          if (predefinedModel) {
-            console.log('AIProvider init: Found predefined model:', predefinedModel.name);
-            return predefinedModel;
-          }
-          
-          // Check for stored model details
-          const storedModelDetails = localStorage.getItem('selected_model_details');
-          
-          if (storedModelDetails) {
-            try {
-              const modelConfig = JSON.parse(storedModelDetails) as AIModelConfig;
-              console.log('AIProvider init: Using stored model details:', modelConfig.name);
-              return modelConfig;
-            } catch (err) {
-              console.error('AIProvider init: Error parsing stored model details:', err);
-            }
-          }
-          
-          // Create a basic model config from the ID
-          const basicModel: AIModelConfig = {
-            id: storedModelId,
-            name: storedModelId.split('/').pop() || storedModelId,
-            description: 'Model from localStorage',
-            tokensPerMinute: 100000,
-            costPer1KTokens: 0.0,
-            provider: 'openrouter'
-          };
-          
-          console.log('AIProvider init: Created basic model from ID:', basicModel.name);
-          return basicModel;
+      // First try window.ENV object where we stored our environment variables
+      if (window.ENV && window.ENV[key as keyof typeof window.ENV]) {
+        const value = window.ENV[key as keyof typeof window.ENV];
+        if (value) {
+          console.log(`getEnvVariable: Found ${key} in window.ENV: ${key.includes('API_KEY') ? value.substring(0, 5) + '...' : value}`);
+          return value;
         }
-      } catch (err) {
-        console.error('AIProvider init: Error reading from localStorage:', err);
+      }
+      
+      // Try to get from cookies as fallback
+      try {
+        const cookieValue = document.cookie
+          .split('; ')
+          .find(row => row.startsWith(`${key}=`))
+          ?.split('=')[1];
+        
+        if (cookieValue) {
+          console.log(`getEnvVariable: Found ${key} in cookies: ${key.includes('API_KEY') ? cookieValue.substring(0, 5) + '...' : cookieValue}`);
+          return decodeURIComponent(cookieValue);
+        }
+      } catch (e) {
+        console.error(`getEnvVariable: Error reading cookie for ${key}:`, e);
+      }
+      
+      // Try localStorage as another fallback
+      try {
+        const localStorageValue = localStorage.getItem(key);
+        if (localStorageValue) {
+          console.log(`getEnvVariable: Found ${key} in localStorage: ${key.includes('API_KEY') ? localStorageValue.substring(0, 5) + '...' : localStorageValue}`);
+          return localStorageValue;
+        }
+        
+        // For API key, also check the openrouter_api_key key
+        if (key === 'NEXT_PUBLIC_OPENROUTER_API_KEY') {
+          const openrouterApiKey = localStorage.getItem('openrouter_api_key');
+          if (openrouterApiKey) {
+            console.log(`getEnvVariable: Found openrouter_api_key in localStorage: ${openrouterApiKey.substring(0, 5) + '...'}`);
+            return openrouterApiKey;
+          }
+        }
+      } catch (e) {
+        console.error(`getEnvVariable: Error reading localStorage for ${key}:`, e);
       }
     }
     
-    // Fall back to default model
-    console.log('AIProvider init: Using default model');
-    return AVAILABLE_MODELS.find(model => model.isDefault) || AVAILABLE_MODELS[0];
-  });
+    // Fallback to process.env for server-side or if window.ENV is not available
+    if (process.env[key]) {
+      console.log(`getEnvVariable: Found ${key} in process.env: ${key.includes('API_KEY') ? '(hidden)' : process.env[key]}`);
+      return process.env[key];
+    }
+    
+    // For API key, also check OPENROUTER_API_KEY
+    if (key === 'NEXT_PUBLIC_OPENROUTER_API_KEY' && process.env.OPENROUTER_API_KEY) {
+      console.log(`getEnvVariable: Found OPENROUTER_API_KEY in process.env: (hidden)`);
+      return process.env.OPENROUTER_API_KEY;
+    }
+    
+    console.log(`getEnvVariable: ${key} not found in any source`);
+    return undefined;
+  } catch (error) {
+    console.error(`getEnvVariable: Unexpected error getting ${key}:`, error);
+    return undefined;
+  }
+}
+
+// Define a default model to use when no model is specified
+const DEFAULT_MODEL: AIModelConfig = AVAILABLE_MODELS.find(model => model.isDefault) || AVAILABLE_MODELS[0];
+
+// Provider component
+export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // State for API key - initialize with environment variable if available
+  const [apiKey, setApiKey] = useState<string>('');
+  
+  // State for selected model and provider
+  // Initialize with a placeholder - we'll load from environment variables or localStorage in useEffect
+  const [selectedModel, setSelectedModel] = useState<AIModelConfig>(DEFAULT_MODEL);
   
   const selectedProvider = AI_PROVIDERS[0]; // OpenRouter is the only provider
   
@@ -171,222 +194,72 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Available models state
   const [availableModels, setAvailableModels] = useState<string[]>([]);
 
-  // Load API key and model from localStorage on mount
+  // Initialize from environment variables on mount
   useEffect(() => {
-    // Use a separate function to handle async operations
-    const initializeFromStorage = async () => {
-      console.log('Initializing AIContext from localStorage');
-      
-      // Load OpenRouter API key
-      const storedApiKey = safeLocalStorage.getItem('openrouter_api_key');
-      console.log('Stored OpenRouter API key found:', storedApiKey ? 'Yes (hidden for security)' : 'No');
-      
-      if (storedApiKey) {
-        console.log('Setting API key from localStorage');
-        setApiKey(storedApiKey);
-        
-        // Validate the key
-        try {
-          console.log('Validating stored OpenRouter API key...');
-          const isValid = await validateApiKey(storedApiKey);
-          console.log('OpenRouter API key validation result:', isValid);
-          
-          // Explicitly set the validation state
-          setIsApiKeyValid(isValid);
-          console.log('Updated isApiKeyValid state to:', isValid);
-          
-          if (isValid) {
-            try {
-              console.log('Creating AI client for OpenRouter...');
-              const defaultModel = getDefaultModelForProvider('openrouter');
-              console.log('Using default model:', defaultModel.name);
-              const client = createAIClient(storedApiKey, defaultModel);
-              setAIClient(client);
-              console.log('OpenRouter client created successfully');
-              
-              // Fetch available models
-              console.log('Fetching available models...');
-              const models = await fetchAvailableModels(storedApiKey);
-              console.log('Fetched models:', models.length);
-              setAvailableModels(models);
-            } catch (err) {
-              console.error('Error creating OpenRouter client:', err);
-              setError('Error creating OpenRouter client. Please check your API key.');
-              setIsApiKeyValid(false); // Reset validation state on error
-            }
-          } else {
-            console.warn('API key validation failed');
-            setIsApiKeyValid(false); // Ensure validation state is false
-          }
-        } catch (err) {
-          console.error('Error validating stored OpenRouter API key:', err);
-          setError('Error validating OpenRouter API key. Please try again.');
-          setIsApiKeyValid(false); // Reset validation state on error
-        }
-      } else {
-        console.log('No OpenRouter API key found in localStorage');
-        setIsApiKeyValid(false); // Ensure validation state is false when no key exists
-      }
-      
-      // Load selected model
-      const storedModelId = safeLocalStorage.getItem('selected_ai_model');
-      console.log('Stored model ID:', storedModelId);
-      
-      if (storedModelId) {
-        // First check if it's one of our predefined models
-        const predefinedModel = AVAILABLE_MODELS.find(m => m.id === storedModelId);
-        
-        if (predefinedModel) {
-          console.log('Found predefined model:', predefinedModel.name);
-          setSelectedModel(predefinedModel);
-        } else {
-          // Check if we have stored details for this dynamic model
-          const storedModelDetails = safeLocalStorage.getItem('selected_model_details');
-          console.log('Checking for stored model details:', storedModelDetails ? 'Found' : 'Not found');
-          
-          if (storedModelDetails) {
-            try {
-              const modelConfig = JSON.parse(storedModelDetails) as AIModelConfig;
-              console.log('Parsed stored model details:', modelConfig.name);
-              
-              // Verify the ID matches
-              if (modelConfig.id === storedModelId) {
-                console.log('Setting selected model to stored dynamic model:', modelConfig.name);
-                setSelectedModel(modelConfig);
-              } else {
-                console.log('Stored model details ID mismatch, creating new config');
-                // Create a new config based on the ID
-                const dynamicModel: AIModelConfig = {
-                  id: storedModelId,
-                  name: storedModelId.split('/').pop() || storedModelId,
-                  description: 'Dynamic model from OpenRouter',
-                  tokensPerMinute: 100000,
-                  costPer1KTokens: 0.0,
-                  provider: 'openrouter'
-                };
-                setSelectedModel(dynamicModel);
-              }
-            } catch (err) {
-              console.error('Error parsing stored model details:', err);
-              // Fallback to creating a new config
-              const dynamicModel: AIModelConfig = {
-                id: storedModelId,
-                name: storedModelId.split('/').pop() || storedModelId,
-                description: 'Dynamic model from OpenRouter',
-                tokensPerMinute: 100000,
-                costPer1KTokens: 0.0,
-                provider: 'openrouter'
-              };
-              console.log('Setting selected model to new dynamic model:', dynamicModel.name);
-              setSelectedModel(dynamicModel);
-            }
-          } else {
-            // No stored details, create a new config
-            const dynamicModel: AIModelConfig = {
-              id: storedModelId,
-              name: storedModelId.split('/').pop() || storedModelId,
-              description: 'Dynamic model from OpenRouter',
-              tokensPerMinute: 100000,
-              costPer1KTokens: 0.0,
-              provider: 'openrouter'
-            };
-            console.log('Setting selected model to new dynamic model:', dynamicModel.name);
-            setSelectedModel(dynamicModel);
-          }
-        }
-      } else {
-        console.log('No stored model ID, using default model');
-      }
-    };
+    console.log('AIProvider init: Checking for environment variables');
     
-    initializeFromStorage();
-    
-    // Add event listener for storage changes from other tabs
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'openrouter_api_key' && e.newValue !== apiKey) {
-        console.log('OpenRouter API key changed in another tab');
-        setApiKey(e.newValue || '');
-      } else if (e.key === 'selected_ai_model' && e.newValue) {
-        console.log('Selected model changed in another tab:', e.newValue);
-        
-        // First check if it's a predefined model
-        const predefinedModel = AVAILABLE_MODELS.find(m => m.id === e.newValue);
-        
-        if (predefinedModel) {
-          console.log('Found predefined model:', predefinedModel.name);
-          setSelectedModel(predefinedModel);
-        } else {
-          // Try to get the stored details
-          try {
-            const storedDetails = localStorage.getItem('selected_model_details');
-            
-            if (storedDetails) {
-              const modelConfig = JSON.parse(storedDetails) as AIModelConfig;
-              
-              if (modelConfig.id === e.newValue) {
-                console.log('Setting selected model to stored dynamic model:', modelConfig.name);
-                setSelectedModel(modelConfig);
-              } else {
-                // Create a new config
-                const dynamicModel: AIModelConfig = {
-                  id: e.newValue,
-                  name: e.newValue.split('/').pop() || e.newValue,
-                  description: 'Dynamic model from OpenRouter',
-                  tokensPerMinute: 100000,
-                  costPer1KTokens: 0.0,
-                  provider: 'openrouter'
-                };
-                console.log('Setting selected model to new dynamic model:', dynamicModel.name);
-                setSelectedModel(dynamicModel);
-              }
+    // Check if window.ENV is available
+    if (typeof window !== 'undefined') {
+      try {
+        if (window.ENV) {
+          const envApiKey = window.ENV.NEXT_PUBLIC_OPENROUTER_API_KEY;
+          const envModelId = window.ENV.NEXT_PUBLIC_DEFAULT_AI_MODEL;
+          
+          console.log('window.ENV variables:', {
+            NEXT_PUBLIC_OPENROUTER_API_KEY: envApiKey ? 'Set (hidden)' : 'Not set',
+            NEXT_PUBLIC_DEFAULT_AI_MODEL: envModelId || 'Not set'
+          });
+          
+          // If we have an environment API key, use it
+          if (envApiKey && !apiKey) {
+            console.log('Setting API key from window.ENV:', envApiKey.substring(0, 5) + '...');
+            setApiKey(envApiKey);
+            validateKey(envApiKey).catch(err => {
+              console.error('Error validating API key from window.ENV:', err);
+            });
+          } else {
+            console.log('No API key found in window.ENV or apiKey already set');
+          }
+          
+          // If we have an environment model, use it
+          if (envModelId) {
+            console.log('Setting model from window.ENV:', envModelId);
+            // Find the model in AVAILABLE_MODELS
+            const envModel = AVAILABLE_MODELS.find(m => m.id === envModelId);
+            if (envModel) {
+              console.log('Found matching model in AVAILABLE_MODELS:', envModel.name);
+              setSelectedModel(envModel);
             } else {
-              // Create a new config
-              const dynamicModel: AIModelConfig = {
-                id: e.newValue,
-                name: e.newValue.split('/').pop() || e.newValue,
-                description: 'Dynamic model from OpenRouter',
-                tokensPerMinute: 100000,
-                costPer1KTokens: 0.0,
-                provider: 'openrouter'
-              };
-              console.log('Setting selected model to new dynamic model:', dynamicModel.name);
-              setSelectedModel(dynamicModel);
+              console.warn(`Model ${envModelId} not found in AVAILABLE_MODELS. Available models:`, 
+                AVAILABLE_MODELS.map(m => m.id).join(', '));
+              console.warn('Using default model:', DEFAULT_MODEL.name);
+              // If the model is not found, log a warning and use the default model
+              setSelectedModel(DEFAULT_MODEL);
             }
-          } catch (err) {
-            console.error('Error handling model change event:', err);
-            
-            // Fallback to creating a basic model config
-            const dynamicModel: AIModelConfig = {
-              id: e.newValue,
-              name: e.newValue.split('/').pop() || e.newValue,
-              description: 'Dynamic model from OpenRouter',
-              tokensPerMinute: 100000,
-              costPer1KTokens: 0.0,
-              provider: 'openrouter'
-            };
-            console.log('Setting selected model to fallback dynamic model:', dynamicModel.name);
-            setSelectedModel(dynamicModel);
+          } else {
+            console.log('AIProvider init: Using default model');
           }
+        } else {
+          console.log('AIProvider init: window.ENV not available');
+          
+          // Use default model
+          console.log('AIProvider init: Using default model:', DEFAULT_MODEL.name);
+          setSelectedModel(DEFAULT_MODEL);
         }
-      } else if (e.key === 'selected_model_details') {
-        console.log('Model details changed in another tab');
-        // This is handled by the selected_ai_model change
+      } catch (err) {
+        console.error('Error in AIProvider initialization:', err);
+        // Set default model to ensure the app doesn't break
+        setSelectedModel(DEFAULT_MODEL);
       }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
+    } else {
+      console.log('AIProvider init: Not in browser environment');
+    }
   }, []);
 
   // Save API key to localStorage when it changes
   useEffect(() => {
-    console.log('OpenRouter API key changed, saving to localStorage');
+    console.log('OpenRouter API key changed');
     if (apiKey) {
-      safeLocalStorage.setItem('openrouter_api_key', apiKey);
-      
       // Create AI client when API key is set and valid
       if (isApiKeyValid) {
         try {
@@ -399,25 +272,14 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         }
       }
     } else {
-      safeLocalStorage.removeItem('openrouter_api_key');
       setAIClient(null);
     }
-  }, [apiKey, isApiKeyValid]);
+  }, [apiKey, isApiKeyValid, selectedModel]);
 
-  // Save selected model to localStorage when it changes
+  // Update client when selected model changes
   useEffect(() => {
-    // Only save to localStorage if this is a user-initiated change, not the initial state
-    if (selectedModel && selectedModel.id !== 'openai/gpt-3.5-turbo') {
-      console.log('Selected model changed, saving to localStorage:', selectedModel.name);
-      safeLocalStorage.setItem('selected_ai_model', selectedModel.id);
-      
-      // Also save the model details for future retrieval
-      try {
-        safeLocalStorage.setItem('selected_model_details', JSON.stringify(selectedModel));
-        console.log('Saved model details to localStorage');
-      } catch (err) {
-        console.error('Error saving model details to localStorage:', err);
-      }
+    if (selectedModel) {
+      console.log('Selected model changed:', selectedModel.name);
       
       // Update client if needed
       if (isApiKeyValid) {
@@ -430,7 +292,7 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         }
       }
     } else {
-      console.log('Not saving default model to localStorage');
+      console.log('No model selected');
     }
   }, [selectedModel, apiKey, isApiKeyValid]);
 
@@ -459,17 +321,30 @@ export const AIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
           console.log(`Creating OpenRouter client...`);
           // Get a model for this provider
           const model = getModelsByProvider('openrouter')[0];
-          const client = createAIClient(keyToValidate, model);
           
-          setAIClient(client);
-          console.log(`OpenRouter client created successfully`);
+          // Create the client with error handling
+          try {
+            const client = createAIClient(keyToValidate, model);
+            setAIClient(client);
+            console.log(`OpenRouter client created successfully`);
+          } catch (clientErr) {
+            console.error(`Error creating OpenRouter client:`, clientErr);
+            // Don't set error state here to avoid breaking the app
+            // Just log the error and continue
+          }
           
-          // Fetch available models
-          fetchModels();
+          // Fetch available models with error handling
+          try {
+            await fetchModels();
+          } catch (modelsErr) {
+            console.error(`Error fetching models:`, modelsErr);
+            // Don't set error state here to avoid breaking the app
+            // Just log the error and continue
+          }
         } catch (err) {
-          console.error(`Error creating OpenRouter client:`, err);
-          setAIClient(null);
-          setError(`Error creating OpenRouter client. Please check your API key.`);
+          console.error(`Error in client setup:`, err);
+          // Don't set error state here to avoid breaking the app
+          // Just log the error and continue
         }
       } else {
         setAIClient(null);

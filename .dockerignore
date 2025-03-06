@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Node.js
+**/node_modules
+**/npm-debug.log
+**/yarn-debug.log
+**/yarn-error.log
+
+# Next.js
+**/.next
+**/out
+
+# Build files
+**/build
+**/dist
+
+# Environment variables
+**/.env*
+!**/.env.example
+
+# IDE files
+.idea
+.vscode
+*.sublime-project
+*.sublime-workspace
+
+# Misc
+**/.DS_Store
+**/Thumbs.db
+**/*.pem
+
+# Project specific
+.cursor/
+AIImplementationPlan.md
+ProductIdea.md
+UIDesign.md
+Architecture.md 

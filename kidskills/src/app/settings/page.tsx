@@ -7,6 +7,68 @@ import Link from 'next/link';
 import LocalStorageDebugger from '@/components/debug/LocalStorageDebugger';
 import { AVAILABLE_MODELS } from '@/types/ai';
 
+// Helper function to safely get environment variables
+function getEnvVariable(key: string): string | undefined {
+  try {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      // First try window.ENV object where we stored our environment variables
+      if (window.ENV && window.ENV[key as keyof typeof window.ENV]) {
+        console.log(`SettingsPage: Found ${key} in window.ENV`);
+        return window.ENV[key as keyof typeof window.ENV];
+      }
+      
+      // Try to get from cookies as fallback
+      try {
+        const cookieValue = document.cookie
+          .split('; ')
+          .find(row => row.startsWith(`${key}=`))
+          ?.split('=')[1];
+        
+        if (cookieValue) {
+          console.log(`SettingsPage: Found ${key} in cookies`);
+          return cookieValue;
+        }
+      } catch (e) {
+        console.error(`SettingsPage: Error reading cookie for ${key}:`, e);
+      }
+      
+      // Try localStorage as another fallback
+      try {
+        const localStorageValue = localStorage.getItem(key);
+        if (localStorageValue) {
+          console.log(`SettingsPage: Found ${key} in localStorage`);
+          return localStorageValue;
+        }
+      } catch (e) {
+        console.error(`SettingsPage: Error reading localStorage for ${key}:`, e);
+      }
+    }
+    
+    // Fallback to process.env for server-side or if window.ENV is not available
+    if (process.env[key]) {
+      console.log(`SettingsPage: Found ${key} in process.env`);
+      return process.env[key];
+    }
+    
+    console.log(`SettingsPage: ${key} not found in any source`);
+    return undefined;
+  } catch (error) {
+    console.error(`SettingsPage: Unexpected error getting ${key}:`, error);
+    return undefined;
+  }
+}
+
+// Helper function to get cookies
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+  return undefined;
+}
+
 export default function SettingsPage() {
   const { 
     apiKey, 
@@ -35,6 +97,8 @@ export default function SettingsPage() {
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [modelSearchQuery, setModelSearchQuery] = useState('');
+  const [isUsingEnvApiKey, setIsUsingEnvApiKey] = useState(false);
+  const [isUsingEnvModel, setIsUsingEnvModel] = useState(false);
   
   // Popular model families for quick filtering
   const modelFamilies = [
@@ -51,6 +115,72 @@ export default function SettingsPage() {
   // Initialize input fields with API key from context when component mounts
   useEffect(() => {
     console.log('Settings page mounted, initializing from context');
+    
+    // Try to get environment variables from window.ENV
+    if (typeof window !== 'undefined' && window.ENV) {
+      console.log('window.ENV access:', {
+        NEXT_PUBLIC_OPENROUTER_API_KEY: window.ENV.NEXT_PUBLIC_OPENROUTER_API_KEY ? 'Set (hidden)' : 'Not set',
+        NEXT_PUBLIC_DEFAULT_AI_MODEL: window.ENV.NEXT_PUBLIC_DEFAULT_AI_MODEL || 'Not set'
+      });
+      
+      // If we have an environment API key, use it
+      if (window.ENV.NEXT_PUBLIC_OPENROUTER_API_KEY && !apiKey) {
+        console.log('Setting API key from window.ENV');
+        setApiKey(window.ENV.NEXT_PUBLIC_OPENROUTER_API_KEY);
+        setInputKey(window.ENV.NEXT_PUBLIC_OPENROUTER_API_KEY);
+        setIsUsingEnvApiKey(true);
+        
+        // Validate the key
+        validateKey(window.ENV.NEXT_PUBLIC_OPENROUTER_API_KEY);
+      }
+      
+      // If we have an environment model, use it
+      if (window.ENV.NEXT_PUBLIC_DEFAULT_AI_MODEL) {
+        console.log('Setting model from window.ENV:', window.ENV.NEXT_PUBLIC_DEFAULT_AI_MODEL);
+        // Find the model in AVAILABLE_MODELS
+        const envModel = AVAILABLE_MODELS.find(m => m.id === window.ENV.NEXT_PUBLIC_DEFAULT_AI_MODEL);
+        if (envModel) {
+          console.log('Found matching model in AVAILABLE_MODELS:', envModel.name);
+          setSelectedModel(envModel);
+          setIsUsingEnvModel(true);
+        }
+      }
+    } else {
+      console.log('window.ENV not available');
+      
+      // Try to get environment variables from cookies
+      const cookieApiKey = getCookie('NEXT_PUBLIC_OPENROUTER_API_KEY');
+      const cookieModelId = getCookie('NEXT_PUBLIC_DEFAULT_AI_MODEL');
+      
+      console.log('Cookie environment variables:', {
+        NEXT_PUBLIC_OPENROUTER_API_KEY: cookieApiKey ? 'Set (hidden)' : 'Not set',
+        NEXT_PUBLIC_DEFAULT_AI_MODEL: cookieModelId || 'Not set'
+      });
+      
+      // If we have a cookie API key, use it
+      if (cookieApiKey && !apiKey) {
+        console.log('Setting API key from cookie');
+        setApiKey(cookieApiKey);
+        setInputKey(cookieApiKey);
+        setIsUsingEnvApiKey(true);
+        
+        // Validate the key
+        validateKey(cookieApiKey);
+      }
+      
+      // If we have a cookie model, use it
+      if (cookieModelId) {
+        console.log('Setting model from cookie:', cookieModelId);
+        // Find the model in AVAILABLE_MODELS
+        const cookieModel = AVAILABLE_MODELS.find(m => m.id === cookieModelId);
+        if (cookieModel) {
+          console.log('Found matching model in AVAILABLE_MODELS:', cookieModel.name);
+          setSelectedModel(cookieModel);
+          setIsUsingEnvModel(true);
+        }
+      }
+    }
+    
     if (apiKey) {
       console.log('Setting input key from context OpenRouter API key');
       setInputKey(apiKey);
@@ -126,6 +256,7 @@ export default function SettingsPage() {
     if (inputKey.trim()) {
       console.log('Setting OpenRouter API key in context');
       setApiKey(inputKey.trim());
+      setIsUsingEnvApiKey(false); // User is explicitly setting a key, so they're not using the env var anymore
       
       console.log('Validating OpenRouter API key...');
       const isValid = await validateKey(inputKey.trim());
@@ -188,9 +319,10 @@ export default function SettingsPage() {
   // Handle model selection
   const handleModelChange = (modelId: string) => {
     console.log('Changing model to:', modelId);
+    setIsUsingEnvModel(false); // User is explicitly setting a model, so they're not using the env var anymore
     
     // First check if this is one of our predefined models
-    const predefinedModel = availableModels.find(m => m.id === modelId);
+    const predefinedModel = AVAILABLE_MODELS.find(m => m.id === modelId);
     
     if (predefinedModel) {
       console.log('Found predefined model:', predefinedModel.name);
@@ -336,7 +468,7 @@ export default function SettingsPage() {
                 id="apiKey"
                 value={inputKey}
                 onChange={(e) => setInputKey(e.target.value)}
-                placeholder="sk-or-..."
+                placeholder={isUsingEnvApiKey ? "Using environment variable" : "sk-or-..."}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
               />
               <button
@@ -669,4 +801,4 @@ export default function SettingsPage() {
       <LocalStorageDebugger />
     </div>
   );
-} 
+}

@@ -35,6 +35,15 @@ export const AVAILABLE_MODELS: AIModelConfig[] = [
     description: 'Fast and economical model from OpenAI',
     tokensPerMinute: 180000,
     costPer1KTokens: 0.05,
+    isDefault: false,
+    provider: 'openrouter'
+  },
+  {
+    id: 'google/gemini-2.0-pro-exp-02-05:free',
+    name: 'Gemini 2.0 Pro',
+    description: 'Advanced model from Google',
+    tokensPerMinute: 160000,
+    costPer1KTokens: 0.10,
     isDefault: true,
     provider: 'openrouter'
   },

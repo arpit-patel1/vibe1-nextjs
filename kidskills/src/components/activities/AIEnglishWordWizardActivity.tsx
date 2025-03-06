@@ -140,65 +140,20 @@ export const AIEnglishWordWizardActivity = ({
     return false;
   }, [apiKey, isApiKeyValid, selectedModel, localKeyValidated]);
 
-  // Get the current model from localStorage or context
+  // Get the current model to use
   const getCurrentModel = useCallback(() => {
-    console.log("EnglishWordWizard: Getting current model");
+    console.log('EnglishWordWizard: Getting current model');
     
-    // First check if we have a model in context
+    // First try to get the model from context
     if (selectedModel) {
       console.log(`EnglishWordWizard: Using model from context: ${selectedModel.name} (${selectedModel.id})`);
       setCurrentModelUsed(selectedModel);
       return selectedModel;
     }
     
-    // If not, try to get it from localStorage
-    const storedModelId = localStorage.getItem('selected_ai_model');
-    console.log(`EnglishWordWizard: Stored model ID from localStorage: ${storedModelId}`);
-    
-    if (storedModelId) {
-      // Try to get the stored model details
-      const storedModelDetails = localStorage.getItem('selected_model_details');
-      console.log(`EnglishWordWizard: Stored model details: ${storedModelDetails ? 'Found' : 'Not found'}`);
-      
-      if (storedModelDetails) {
-        try {
-          const modelConfig = JSON.parse(storedModelDetails) as AIModelConfig;
-          console.log(`EnglishWordWizard: Using model from localStorage: ${modelConfig.name} (${modelConfig.id})`);
-          setCurrentModelUsed(modelConfig);
-          return modelConfig;
-        } catch (err) {
-          console.error("EnglishWordWizard: Error parsing stored model details:", err);
-        }
-      }
-      
-      // If we couldn't get the details, create a basic model config
-      const basicModel: AIModelConfig = {
-        id: storedModelId,
-        name: storedModelId.split('/').pop() || storedModelId,
-        description: 'Model from localStorage',
-        tokensPerMinute: 100000,
-        costPer1KTokens: 0.0,
-        provider: 'openrouter'
-      };
-      
-      console.log(`EnglishWordWizard: Created basic model config: ${basicModel.name} (${basicModel.id})`);
-      setCurrentModelUsed(basicModel);
-      return basicModel;
-    }
-    
-    // If we still don't have a model, use the default but DO NOT save it to localStorage
-    console.log("EnglishWordWizard: No model found, using default model (temporary, not saving to localStorage)");
-    const defaultModel = {
-      id: 'openai/gpt-3.5-turbo',
-      name: 'GPT-3.5 Turbo',
-      description: 'Default model',
-      tokensPerMinute: 100000,
-      costPer1KTokens: 0.0,
-      provider: 'openrouter'
-    };
-    
-    setCurrentModelUsed(defaultModel);
-    return defaultModel;
+    console.log("EnglishWordWizard: No model found in context");
+    setError('Please select an AI model in the Settings page.');
+    return null;
   }, [selectedModel]);
 
   // Initial setup and API key validation
@@ -249,7 +204,7 @@ export const AIEnglishWordWizardActivity = ({
 
   // Generate a new English exercise
   const generateEnglishExercise = async (useBackupModel = false) => {
-    console.log(`EnglishWordWizard: Attempting to generate exercise${useBackupModel ? ' with backup model' : ''}`);
+    console.log(`EnglishWordWizard: Attempting to generate exercise`);
     
     // Check if we're already loading an exercise
     if (isLoading) {
@@ -279,20 +234,7 @@ export const AIEnglishWordWizardActivity = ({
     // Get the current model to use
     let modelToUse = getCurrentModel();
     
-    // If using backup model, switch to a more reliable model
-    if (useBackupModel) {
-      console.log("EnglishWordWizard: Using backup model (GPT-3.5 Turbo) due to previous failure");
-      modelToUse = {
-        id: 'openai/gpt-3.5-turbo',
-        name: 'GPT-3.5 Turbo (Backup)',
-        description: 'Backup model for reliability',
-        tokensPerMinute: 100000,
-        costPer1KTokens: 0.0,
-        provider: 'openrouter'
-      };
-    }
-    
-    console.log(`EnglishWordWizard: Using model for generation: ${modelToUse.name} (${modelToUse.id})`);
+    console.log(`EnglishWordWizard: Using model for generation: ${modelToUse?.name} (${modelToUse?.id})`);
     
     // Ensure we have a selected model
     if (!modelToUse) {
@@ -361,14 +303,6 @@ export const AIEnglishWordWizardActivity = ({
       if (!result) {
         console.error("EnglishWordWizard: Generated result is undefined");
         
-        // Try with backup model if not already using it
-        if (!useBackupModel) {
-          console.log("EnglishWordWizard: Trying with backup model");
-          setIsLoading(false);
-          generateEnglishExercise(true);
-          return;
-        }
-        
         setError('Failed to generate an exercise. Please try again.');
         setIsLoading(false);
         return;
@@ -377,14 +311,6 @@ export const AIEnglishWordWizardActivity = ({
       if (!result.question) {
         console.error("EnglishWordWizard: Generated question is undefined");
         console.error("EnglishWordWizard: Full result:", JSON.stringify(result, null, 2));
-        
-        // Try with backup model if not already using it
-        if (!useBackupModel) {
-          console.log("EnglishWordWizard: Trying with backup model");
-          setIsLoading(false);
-          generateEnglishExercise(true);
-          return;
-        }
         
         setError('Failed to generate a valid exercise. Please try again.');
         setIsLoading(false);

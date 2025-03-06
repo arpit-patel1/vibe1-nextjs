@@ -298,7 +298,7 @@ export function generateEnglishQuestion(params: AIQuestionParams): AIGeneratedQu
     return generateGrammarQuestion(params);
   } else if (questionType === 'vocabulary') {
     // Generate vocabulary question
-    // ... existing code ...
+    return generateVocabularyQuestion(params);
   } else if (questionType === 'reading') {
     return generateReadingComprehensionQuestion(params);
   } else if (questionType === 'creative-writing') {
@@ -846,5 +846,111 @@ function generateGrammarQuestion(params: AIQuestionParams): AIGeneratedQuestion 
     explanation: selectedQuestion.explanation,
     hint: selectedQuestion.hint,
     tags: [grammarType, 'grammar', 'english']
+  };
+}
+
+/**
+ * Generate vocabulary questions with appropriate difficulty
+ */
+function generateVocabularyQuestion(params: AIQuestionParams): AIGeneratedQuestion {
+  const { difficulty, gradeLevel, interests } = params;
+  
+  // Define vocabulary questions for different grade levels
+  const vocabularyQuestions = {
+    easy: [
+      {
+        question: "Which word means 'very big'?",
+        options: [
+          { id: "a", text: "Tiny", isCorrect: false },
+          { id: "b", text: "Huge", isCorrect: true },
+          { id: "c", text: "Small", isCorrect: false },
+          { id: "d", text: "Fast", isCorrect: false }
+        ],
+        explanation: "The word 'huge' means very big or large in size.",
+        hint: "Think of something that is the opposite of small."
+      },
+      {
+        question: "What is the meaning of 'happy'?",
+        options: [
+          { id: "a", text: "Feeling joy", isCorrect: true },
+          { id: "b", text: "Feeling sad", isCorrect: false },
+          { id: "c", text: "Feeling tired", isCorrect: false },
+          { id: "d", text: "Feeling angry", isCorrect: false }
+        ],
+        explanation: "Happy means feeling or showing pleasure or contentment.",
+        hint: "Think of how you feel when something good happens."
+      }
+    ],
+    medium: [
+      {
+        question: "Which word is a synonym for 'brave'?",
+        options: [
+          { id: "a", text: "Scared", isCorrect: false },
+          { id: "b", text: "Timid", isCorrect: false },
+          { id: "c", text: "Courageous", isCorrect: true },
+          { id: "d", text: "Weak", isCorrect: false }
+        ],
+        explanation: "Courageous means brave or showing courage, which is the ability to do something that frightens one.",
+        hint: "Look for a word that describes someone who isn't afraid."
+      },
+      {
+        question: "What does the word 'ancient' mean?",
+        options: [
+          { id: "a", text: "Very new", isCorrect: false },
+          { id: "b", text: "Very old", isCorrect: true },
+          { id: "c", text: "Very big", isCorrect: false },
+          { id: "d", text: "Very small", isCorrect: false }
+        ],
+        explanation: "Ancient means belonging to the very distant past and no longer in existence.",
+        hint: "Think about things like dinosaurs or pyramids."
+      }
+    ],
+    hard: [
+      {
+        question: "What is the definition of 'perseverance'?",
+        options: [
+          { id: "a", text: "Giving up easily", isCorrect: false },
+          { id: "b", text: "Being very tall", isCorrect: false },
+          { id: "c", text: "Continuing despite difficulties", isCorrect: true },
+          { id: "d", text: "Running very fast", isCorrect: false }
+        ],
+        explanation: "Perseverance means persistence in doing something despite difficulty or delay in achieving success.",
+        hint: "Think about continuing to try even when things are hard."
+      },
+      {
+        question: "Which word means 'to make something better'?",
+        options: [
+          { id: "a", text: "Worsen", isCorrect: false },
+          { id: "b", text: "Improve", isCorrect: true },
+          { id: "c", text: "Maintain", isCorrect: false },
+          { id: "d", text: "Ignore", isCorrect: false }
+        ],
+        explanation: "Improve means to make or become better.",
+        hint: "Think of what happens when you practice a skill over time."
+      }
+    ]
+  };
+  
+  // Select questions based on difficulty
+  let relevantQuestions = vocabularyQuestions[difficulty as keyof typeof vocabularyQuestions];
+  
+  // If the specified difficulty doesn't exist, use medium difficulty
+  if (!relevantQuestions) {
+    relevantQuestions = vocabularyQuestions.medium;
+  }
+  
+  // Select a random question from the relevant category
+  const randomIndex = Math.floor(Math.random() * relevantQuestions.length);
+  const selectedQuestion = relevantQuestions[randomIndex];
+  
+  // Shuffle options for randomness
+  const shuffledOptions = [...selectedQuestion.options].sort(() => Math.random() - 0.5);
+  
+  return {
+    question: selectedQuestion.question,
+    options: shuffledOptions,
+    explanation: selectedQuestion.explanation,
+    hint: selectedQuestion.hint,
+    tags: ['vocabulary', 'english']
   };
 } 

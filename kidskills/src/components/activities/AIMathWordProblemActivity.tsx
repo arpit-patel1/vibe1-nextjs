@@ -138,65 +138,20 @@ export const AIMathWordProblemActivity = ({
     return false;
   }, [apiKey, isApiKeyValid, selectedModel, localKeyValidated]);
 
-  // Get the current model from localStorage or context
+  // Get the current model to use
   const getCurrentModel = useCallback(() => {
-    console.log("MathWordProblem: Getting current model");
+    console.log('MathWordProblem: Getting current model');
     
-    // First check if we have a model in context
+    // First try to get the model from context
     if (selectedModel) {
       console.log(`MathWordProblem: Using model from context: ${selectedModel.name} (${selectedModel.id})`);
       setCurrentModelUsed(selectedModel);
       return selectedModel;
     }
     
-    // If not, try to get it from localStorage
-    const storedModelId = localStorage.getItem('selected_ai_model');
-    console.log(`MathWordProblem: Stored model ID from localStorage: ${storedModelId}`);
-    
-    if (storedModelId) {
-      // Try to get the stored model details
-      const storedModelDetails = localStorage.getItem('selected_model_details');
-      console.log(`MathWordProblem: Stored model details: ${storedModelDetails ? 'Found' : 'Not found'}`);
-      
-      if (storedModelDetails) {
-        try {
-          const modelConfig = JSON.parse(storedModelDetails) as AIModelConfig;
-          console.log(`MathWordProblem: Using model from localStorage: ${modelConfig.name} (${modelConfig.id})`);
-          setCurrentModelUsed(modelConfig);
-          return modelConfig;
-        } catch (err) {
-          console.error("MathWordProblem: Error parsing stored model details:", err);
-        }
-      }
-      
-      // If we couldn't get the details, create a basic model config
-      const basicModel: AIModelConfig = {
-        id: storedModelId,
-        name: storedModelId.split('/').pop() || storedModelId,
-        description: 'Model from localStorage',
-        tokensPerMinute: 100000,
-        costPer1KTokens: 0.0,
-        provider: 'openrouter'
-      };
-      
-      console.log(`MathWordProblem: Created basic model config: ${basicModel.name} (${basicModel.id})`);
-      setCurrentModelUsed(basicModel);
-      return basicModel;
-    }
-    
-    // If we still don't have a model, use the default but DO NOT save it to localStorage
-    console.log("MathWordProblem: No model found, using default model (temporary, not saving to localStorage)");
-    const defaultModel = {
-      id: 'openai/gpt-3.5-turbo',
-      name: 'GPT-3.5 Turbo',
-      description: 'Default model',
-      tokensPerMinute: 100000,
-      costPer1KTokens: 0.0,
-      provider: 'openrouter'
-    };
-    
-    setCurrentModelUsed(defaultModel);
-    return defaultModel;
+    console.log("MathWordProblem: No model found in context");
+    setError('Please select an AI model in the Settings page.');
+    return null;
   }, [selectedModel]);
 
   // Log debug information about API key status
@@ -331,7 +286,7 @@ export const AIMathWordProblemActivity = ({
 
   // Generate a new word problem
   const generateWordProblem = async (useBackupModel = false) => {
-    console.log(`MathWordProblem: Attempting to generate word problem${useBackupModel ? ' with backup model' : ''}`);
+    console.log(`MathWordProblem: Attempting to generate word problem`);
     
     // Check if we're already loading a problem
     if (isLoading) {
@@ -361,20 +316,7 @@ export const AIMathWordProblemActivity = ({
     // Get the current model to use
     let modelToUse = getCurrentModel();
     
-    // If using backup model, switch to a more reliable model
-    if (useBackupModel) {
-      console.log("MathWordProblem: Using backup model (GPT-3.5 Turbo) due to previous failure");
-      modelToUse = {
-        id: 'openai/gpt-3.5-turbo',
-        name: 'GPT-3.5 Turbo (Backup)',
-        description: 'Backup model for reliability',
-        tokensPerMinute: 100000,
-        costPer1KTokens: 0.0,
-        provider: 'openrouter'
-      };
-    }
-    
-    console.log(`MathWordProblem: Using model for generation: ${modelToUse.name} (${modelToUse.id})`);
+    console.log(`MathWordProblem: Using model for generation: ${modelToUse?.name} (${modelToUse?.id})`);
     
     // Ensure we have a selected model
     if (!modelToUse) {
@@ -457,14 +399,6 @@ export const AIMathWordProblemActivity = ({
       if (!result) {
         console.error("MathWordProblem: Generated result is undefined");
         
-        // Try with backup model if not already using it
-        if (!useBackupModel) {
-          console.log("MathWordProblem: Trying with backup model");
-          setIsLoading(false);
-          generateWordProblem(true);
-          return;
-        }
-        
         setError('Failed to generate a question. Please try again.');
         setIsLoading(false);
         return;
@@ -473,14 +407,6 @@ export const AIMathWordProblemActivity = ({
       if (!result.question) {
         console.error("MathWordProblem: Generated question is undefined");
         console.error("MathWordProblem: Full result:", JSON.stringify(result, null, 2));
-        
-        // Try with backup model if not already using it
-        if (!useBackupModel) {
-          console.log("MathWordProblem: Trying with backup model");
-          setIsLoading(false);
-          generateWordProblem(true);
-          return;
-        }
         
         setError('Failed to generate a valid question. Please try again.');
         setIsLoading(false);
@@ -546,54 +472,15 @@ export const AIMathWordProblemActivity = ({
       } else if (err.message?.includes('Invalid API response format')) {
         console.error('MathWordProblem: Invalid API response format:', err);
         
-        // Try with backup model if not already using it
-        if (!useBackupModel) {
-          console.log("MathWordProblem: API returned invalid response format, trying with backup model");
-          setIsLoading(false);
-          
-          // Add a longer delay before retrying with the backup model
-          console.log("MathWordProblem: Adding a longer delay before retrying with backup model");
-          setTimeout(() => {
-            generateWordProblem(true);
-          }, 2000);
-          return;
-        } else {
-          setError('The AI service returned an invalid response. Please try again later or select a different model in Settings.');
-        }
+        setError('The AI service returned an invalid response. Please try again later or select a different model in Settings.');
       } else if (err.message?.includes('Cannot read properties of undefined')) {
         console.error('MathWordProblem: Undefined property error:', err);
         
-        // Try with backup model if not already using it
-        if (!useBackupModel) {
-          console.log("MathWordProblem: Undefined property error, trying with backup model");
-          setIsLoading(false);
-          
-          // Add a longer delay before retrying with the backup model
-          console.log("MathWordProblem: Adding a longer delay before retrying with backup model");
-          setTimeout(() => {
-            generateWordProblem(true);
-          }, 2000);
-          return;
-        } else {
-          setError('There was an error with the AI response. Please try again later or select a different model in Settings.');
-        }
+        setError('There was an error with the AI response. Please try again later or select a different model in Settings.');
       } else if (err.message?.includes('Empty API response')) {
         console.error('MathWordProblem: Empty API response:', err);
         
-        // Try with backup model if not already using it
-        if (!useBackupModel) {
-          console.log("MathWordProblem: Empty API response, trying with backup model");
-          setIsLoading(false);
-          
-          // Add a longer delay before retrying with the backup model
-          console.log("MathWordProblem: Adding a longer delay before retrying with backup model");
-          setTimeout(() => {
-            generateWordProblem(true);
-          }, 2000);
-          return;
-        } else {
-          setError('The AI service returned an empty response. Please try again later or select a different model in Settings.');
-        }
+        setError('The AI service returned an empty response. Please try again later or select a different model in Settings.');
       } else {
         setError(`Error: ${err.message || 'Failed to generate word problem'}`);
       }
